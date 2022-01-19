@@ -11,6 +11,13 @@
 % aligned to the granular input layer, and compare coherence across
 % sessions.
 
+% Desired outputs (per session)
+% 1. ch x time x trials -- LFP, PSD, CSD
+% 2. ch x time -- LFP, PSD, CSD (with plots of averages)
+% 3.  -3000 : 100 : +3000 depth normalized -- PSD CSD.
+
+% final desired output == (penetration x depth x time/freq)
+
 %% FILE SELECTION
 clear
 close all
@@ -60,7 +67,7 @@ for ch = 1:chanN
     if n < nwind    % zero-pad x if it has length less than the window length
         x(nwind)=0;  n=nwind;
     end
-    noverlap = 1;
+    noverlap = 0;
     k        = fix((n-noverlap)/(nwind-noverlap));	% Number of windows
     index    = 1:nwind;
     % compute PSD

@@ -11,6 +11,13 @@
 % aligned to the granular input layer, and compare coherence across
 % sessions.
 
+% Desired outputs (per session)
+% 1. ch x time x trials -- LFP, PSD, CSD
+% 2. ch x time -- LFP, PSD, CSD (with plots of averages)
+% 3.  -3000 : 100 : +3000 depth normalized -- PSD CSD.
+
+% final desired output == (penetration x depth x time/freq)
+
 %% FILE SELECTION
 clear
 close all
