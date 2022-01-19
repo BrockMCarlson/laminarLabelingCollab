@@ -13,7 +13,8 @@
 
 %% FILE SELECTION
 clear
-BRdatafile    = 'D:\all BRFS\151231_E\151231_E_brfs001';
+close all
+BRdatafile    = 'D:\all BRFS\151221_E\151221_E_brfs001';
 
 %% Pre-processing the LFP
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
@@ -21,28 +22,22 @@ el            = 'eD';
 sortdirection = 'ascending'; %  descending (NN) or ascending (Uprobe)
 pre           = 200;
 post          = 800;
-chans         = [1:24]; 
-trls          = [1:200];
 
 flag_subtractbasline = true;
 flag_halfwaverectify = false;
 
-clear LFP EventCodes EventTimes DAT TM CSD CSDf corticaldepth y
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-[LFP, EventCodes, EventTimes]= getLFP(BRdatafile,extension,el,sortdirection);
+%% Trigger data
+[lfp, EventCodes, EventTimes]= getLFP(BRdatafile,extension,el,sortdirection);
 triggerpoints = EventTimes(EventCodes == 23 | EventCodes == 25 | EventCodes == 27 | EventCodes == 29| EventCodes == 31);
-if isempty(chans)
-    chans = [1:size(LFP,2)];
-end
-LFP = LFP(:,chans);
 
-[DAT, TM] = trigData(LFP, triggerpoints , pre, post);
-if isempty(trls)
-    EVP = mean(DAT,3);
-else
-EVP = mean(DAT(:,:,trls),3);
-end
 
+[DAT, TM] = trigData(lfp, triggerpoints , pre, post);
+
+%% Select trials
+trls % you need to pull out the right trials here
+% Import .txt file here.
+
+EVP = DAT(:,:,trls);
 
 
 %% CSD processing and plotting
