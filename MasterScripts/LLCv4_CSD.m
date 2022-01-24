@@ -21,6 +21,8 @@
 %% FILE SELECTION
 clear
 close all
+
+CODEDIR = PostSetup('BrockHome_LLC');
 BRdatafile    = 'D:\all BRFS\151221_E\151221_E_brfs001';
 
 %% Pre-processing the LFP
@@ -29,6 +31,8 @@ el            = 'eD';
 sortdirection = 'ascending'; %  descending (NN) or ascending (Uprobe)
 pre           = 200;
 post          = 800;
+chans         = [1:24]; 
+trls          = [1:200];
 
 flag_subtractbasline = true;
 flag_halfwaverectify = false;
@@ -36,16 +40,31 @@ flag_halfwaverectify = false;
 %% Trigger data
 [lfp, EventCodes, EventTimes]= getLFP(BRdatafile,extension,el,sortdirection);
 triggerpoints = EventTimes(EventCodes == 23 | EventCodes == 25 | EventCodes == 27 | EventCodes == 29| EventCodes == 31);
-
+chans = 1:size(lfp,2);
 
 [DAT, TM] = trigData(lfp, triggerpoints , pre, post);
 
+% create STIM
+filelist = {BRdatafile};
+V1 = 'LV1'; %% check this later
+STIM = diTP(filelist,V1);
+[STIM,fails] = diPT(STIM); 
+pn = strcat(STIM.header,'_eD');
+global ALIGNDIR
+ALIGNDIR = 'T:\diSTIM - adaptdcos&CRF\V1Limits\';
+STIM = diV1Lim(STIM,pn);
+
+% Create LFP triggered SDF
+datatype = 'lfp';
+[RESP, win_ms, SDF, sdftm, PSTH, psthtm]= diNeuralDat(STIM,datatype,true);
+
+
 %% Select trials
-trls % you need to pull out the right trials here
-% Import .txt file here.
-
-EVP = DAT(:,:,trls);
-
+% % trls % you need to pull out the right trials here
+% % % Import .txt file here.
+% % 
+% % EVP = DAT(:,:,trls);
+EVP = mean(DAT,3);
 
 %% CSD processing and plotting
 switch sortdirection
@@ -69,6 +88,9 @@ f_ShadedLinePlotbyDepth(CSD,corticaldepth,TM,[],1)
 title(BRdatafile,'interpreter','none')
 set(gcf,'Position',[1 40 700 1200]); 
 
+
+
+%%
 CSDf = filterCSD(CSD);
 
 subplot(1,2,2)
