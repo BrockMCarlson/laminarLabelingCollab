@@ -20,8 +20,7 @@
 
 %% FILE SELECTION
 clear
-close all
-BRdatafile    = 'D:\all BRFS\151221_E\151221_E_brfs001';
+BRdatafile    = 'E:\all BRFS\151221_E\151221_E_brfs001';
 
 %% Pre-processing the LFP
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
@@ -41,10 +40,10 @@ triggerpoints = EventTimes(EventCodes == 23 | EventCodes == 25 | EventCodes == 2
 [DAT, TM] = trigData(lfp, triggerpoints , pre, post);
 
 %% Select trials
-trls % you need to pull out the right trials here
+% % trls % you need to pull out the right trials here
 % Import .txt file here.
 
-EVP = DAT(:,:,trls);
+% % EVP = DAT(:,:,trls);
 
 
 %% FFT
@@ -112,7 +111,7 @@ power(idx60hz,:) = 0;
  end
 
  chans = 1:size(power_norm,2);
-figure(1), set(gcf,'color','w','position',[1 1 400 800]); 
+figure, set(gcf,'color','w','position',[1 1 400 800]); 
 imagesc(freq_vector,chans,power_norm'); 
 colormap('hot'); xlim([0 100]); 
 xlabel('freq (Hz)'); ylabel('contact number'); 
@@ -121,7 +120,7 @@ set(gca,'tickdir','out','ytick',chans);
 %% Get the Gamma x Beta cross
 % Beta is 12 - 20Hz (for our purposes)
 % Gamma is 30-59,61:100
-figure(2)
+figure
 beta_index = (freq_vector > 12) & (freq_vector < 25);
 gamma_index = (freq_vector > 30) ;
 gamma_index(idx60hz) = false;

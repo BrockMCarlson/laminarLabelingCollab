@@ -31,45 +31,12 @@ el            = 'eD';
 sortdirection = 'ascending'; %  descending (NN) or ascending (Uprobe)
 pre           = -200;
 post          = 800;
-chans         = [1:24]; 
-trls          = [1:200];
 
 flag_subtractbasline = true;
 flag_halfwaverectify = false;
 
-%% Trigger data without trial aligning
-% % % % % [lfp, EventCodes, EventTimes]= getLFP(BRdatafile,extension,el,sortdirection);
-% % % % % triggerpoints = EventTimes(EventCodes == 23 | EventCodes == 25 | EventCodes == 27 | EventCodes == 29| EventCodes == 31);
-% % % % % chans = 1:size(lfp,2);
-% % % % % 
-% % % % % [DAT, TM] = trigData(lfp, triggerpoints , pre, post);
 
-
-%% Trial-align data
-% % % % create STIM
-% % % TuneList = importTuneList(2);  % change the input argument (1, 2 or 3) 4 is for bmcBRFS -   ditasks = {'bminteroc','bmcBRFS'};
-% % %         idx = find(strcmp(TuneList.Datestr,header(1:6)));
-% % %         pn  = find(strcmp(TuneList.Penetration(idx),penetration));
-% % %     % get TPs (timepoints)
-% % %         clear STIM V1 STIM0
-% % %         V1 = TuneList.Structure{s};
-% % %         STIM = brfsTP(filelist);
-% % %         STIM.V1   = V1;
-% % %         STIM.penetration = penetration;
-% % %      % V1 lim
-% % %             STIM.rmch = TuneList.BadBtmCh(idx(pn));
-% % %             label = penetration(end-1:end);              
-% % %             ToC = 3;
-% % %             BoC = 32;
-% % %             SinkBtm = 19;
-% % %             elabels = ToC:1:BoC;
-% % %             l4_idx    = find(elabels==SinkBtm);
-% % %             ninside   = length(elabels);
-% % %             depths    = [0:ninside-1; -1*((1:ninside) - l4_idx); ninside-1:-1:0]';
-% % %             v1lim = [ToC SinkBtm BoC];
-% % %             STIM.rf_xyr = [];
-% % %             STIM.overlap = [];
-            
+%% Trial-align data -- Create STIM
 
 filelist = {BRdatafile};
 V1 = 'LV1'; %% check this later
@@ -100,9 +67,6 @@ STIM = diTP(filelist,V1);
     STIM.el_labels    =  el_labels;
     STIM.depths       =  depths;
     STIM.v1lim         = [v1lim(1) find(strcmp(elabel,l4l)) v1lim(2)];
-
-
-
 
 % Create LFP triggered SDF
 [RESP, win_ms, SDF, sdftm, PSTH, psthtm]= trialAlignLFP_BMC(STIM,pre,post); %note 'pre' must be negative
