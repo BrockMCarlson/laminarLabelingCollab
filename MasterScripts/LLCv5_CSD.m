@@ -22,7 +22,15 @@
 clear
 close all
 
-CODEDIR = PostSetup('BrockWork');
+%% SET UP DIRECTORIES - I.E. PostSetup('BrockWork')
+CODEDIR  = 'C:\Users\Brock\Documents\MATLAB\GitHub\laminarLabelingCollab\MasterScripts';
+cd(CODEDIR)
+DATADIR = 'E:\all BRFS';
+task = 'brfs';
+OUTDIR = 'E:\LLC individual penetration outputs';
+
+
+%% set up directory loop
 BRdatafile    = 'E:\all BRFS\151221_E\151221_E_brfs001';
 
 %% Pre-processing the LFP
@@ -45,7 +53,7 @@ STIM = diTP(filelist,V1);
 
 %diV1lim
     global ALIGNDIR
-    ALIGNDIR = 'T:\diSTIM - adaptdcos&CRF\V1Limits\';
+    ALIGNDIR = 'E:\V1Limits\';
     penetrationNumber = 1;
     STIM.penetration = strcat(STIM.header,'_eD');
     STIM.rmch = 0;
@@ -70,14 +78,19 @@ STIM = diTP(filelist,V1);
 
 % Create LFP triggered SDF
 [RESP, win_ms, SDF, sdftm, PSTH, psthtm]= trialAlignLFP_BMC(STIM,pre,post); %note 'pre' must be negative
-
+chans = 1:size(SDF,1);
 
 %% Select trials
-% % trls % you need to pull out the right trials here
-% % % Import .txt file here.
+SDFch1 = squeeze(SDF(1,:,:));
+trls = ~isnan(SDFch1(1001,:));
+SDF800 = SDF(:,:,trls);
+if sum(trls) < 25
+    error('trial count too low. Can you add binocular simultaneous? Or just include trials without a NaN after 500?')
+end
+
 % % 
 % % EVP = DAT(:,:,trls);
-EVP = nanmean(SDF,3);
+EVP = nanmean(SDF800,3);
 
 %% CSD processing and plotting
 switch sortdirection
@@ -95,7 +108,7 @@ if flag_halfwaverectify
     CSD(CSD > 0) = 0;
 end
 CSD = padarray(CSD,[1 0],NaN,'replicate');
-figure
+csdfig = figure;
 subplot(1,2,1)
 f_ShadedLinePlotbyDepth(CSD,corticaldepth,sdftm,[],1)
 title(BRdatafile,'interpreter','none')
@@ -123,6 +136,14 @@ plot([0 0], ylim,'k')
 c = colorbar;
 % caxis([-250 250])
 
-%% PSD processing and plotting
+%% Save figs
+saveFigNameFIG = strcat(OUTDIR,filesep,BRdatafile(23:end),'_CSD.fig');
+saveFigNamePNG = strcat(OUTDIR,filesep,BRdatafile(23:end),'_CSD.png');
+savefig(csdfig,saveFigNameFIG)
+saveas(csdfig,saveFigNamePNG)
 
-
+%% Save data
+% avgBeta, avgGamma, power_norm, freq_vector, STIM, powerAvg. SDF800
+saveName = strcat(OUTDIR,filesep,BRdatafile(23:end),'_PSD_matVar.m');
+save(saveName, 'STIM', 'SDF', 'SDF800', 'CSD', 'sdftm','corticaldepth',...
+    '-mat','-v7.3')

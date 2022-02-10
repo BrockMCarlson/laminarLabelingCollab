@@ -22,8 +22,19 @@
 clear
 close all
 
-CODEDIR = PostSetup('BrockWork');
+
+%% SET UP DIRECTORIES - I.E. PostSetup('BrockWork')
+CODEDIR  = 'C:\Users\Brock\Documents\MATLAB\GitHub\laminarLabelingCollab\MasterScripts';
+cd(CODEDIR)
+DATADIR = 'E:\all BRFS';
+task = 'brfs';
+OUTDIR = 'E:\LLC individual penetration outputs';
+
+%% set up directory loop
 BRdatafile    = 'E:\all BRFS\151221_E\151221_E_brfs001';
+
+
+    close all
 
 %% Pre-processing the LFP
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
@@ -45,7 +56,7 @@ STIM = diTP(filelist,V1);
 
 %diV1lim
     global ALIGNDIR
-    ALIGNDIR = 'T:\diSTIM - adaptdcos&CRF\V1Limits\';
+    ALIGNDIR = 'E:\V1Limits\';
     penetrationNumber = 1;
     STIM.penetration = strcat(STIM.header,'_eD');
     STIM.rmch = 0;
@@ -73,11 +84,17 @@ STIM = diTP(filelist,V1);
 
 
 %% Select trials
-% % trls % you need to pull out the right trials here
-% % % Import .txt file here.
+SDFch1 = squeeze(SDF(1,:,:));
+trls = ~isnan(SDFch1(1001,:));
+SDF800 = SDF(:,:,trls);
+if sum(trls) < 25
+    error('trial count too low. Can you add binocular simultaneous? Or just include trials without a NaN after 500?')
+end
+
 % % 
 % % EVP = DAT(:,:,trls);
-% EVP = nanmean(SDF,3);
+EVP = nanmean(SDF800,3);
+
 
 %% FFT
 Fs       = 1000; % Hz
@@ -127,19 +144,24 @@ for ch = 1:chanN
             end
         freq_vector = (select - 1)*Fs/nfft;
         if ch == 1
-            power = nan(size(Spec,1),chanN); 
+            power = nan(chanN,size(Spec,1),size(SDF,3));
         end
         power(ch,:,trialNum) = Spec; 
     end
 end
+% permute power, initial design was (spec x chanN)
+powerPermute = permute(power,[2 1 3]);
 
 % average power
-powerAvg = nanmean(power,3);
-youNeedToResizeHere
+powerAvg = nanmean(powerPermute,3);
+
 
 %% cheat at your band stop filter
 idx60hz = find((freq_vector > 57.4 & freq_vector < 62.6 ));
 powerAvg(idx60hz,:) = 0;
+%remove top channel artifact?
+warning('removing top channel artifact - necessary? BMC DEV!!')
+% powerAvg(:,1) = 0;
 
 % normalize power @ each frequency relative to power across contacts 
  power_norm = nan(size(powerAvg)); 
@@ -150,16 +172,19 @@ powerAvg(idx60hz,:) = 0;
  end
 
  chans = 1:size(power_norm,2);
-figure, set(gcf,'color','w','position',[1 1 400 800]); 
+psdfig(1) = figure;
+set(gcf,'color','w','position',[1 1 400 800]); 
 imagesc(freq_vector,chans,power_norm'); 
 colormap('hot'); xlim([0 100]); 
 xlabel('freq (Hz)'); ylabel('contact number'); 
 set(gca,'tickdir','out','ytick',chans); 
+titleText = {STIM.header,'Stimulus Evoked PSD'};
+title(titleText,'interpreter', 'none')
 
 %% Get the Gamma x Beta cross
 % Beta is 12 - 20Hz (for our purposes)
 % Gamma is 30-59,61:100
-figure
+psdfig(2)  = figure;
 beta_index = (freq_vector > 12) & (freq_vector < 25);
 gamma_index = (freq_vector > 30) ;
 gamma_index(idx60hz) = false;
@@ -171,6 +196,7 @@ for i = chans
 end
 
 
+
 plot(avgBeta)
 hold on
 plot(fliplr(avgGamma))
@@ -178,3 +204,18 @@ view([90 -90])
 set(gca,'xdir','reverse')
 legend('Beta','Gamma','Location','best')
 titleText = {'Normalized Gamma x Beta power across contacts',BRdatafile(22:end)};
+
+%% Save figs
+saveFigNameFIG = strcat(OUTDIR,filesep,BRdatafile(23:end),'_PSD.fig');
+saveFigNamePNG1 = strcat(OUTDIR,filesep,BRdatafile(23:end),'_PSDprofile.png');
+saveFigNamePNG2 = strcat(OUTDIR,filesep,BRdatafile(23:end),'_PSDGammaBeta.png');
+savefig(psdfig,saveFigNameFIG)
+saveas(psdfig(1),saveFigNamePNG1)
+saveas(psdfig(2),saveFigNamePNG2)
+
+%% Save data
+% avgBeta, avgGamma, power_norm, freq_vector, STIM, powerAvg. SDF800
+saveName = strcat(OUTDIR,filesep,BRdatafile(23:end),'_PSD_matVar.m');
+save(saveName,'avgBeta', 'avgGamma', 'power_norm', 'freq_vector', 'STIM',...
+    'powerAvg', 'SDF', 'SDF800', 'sdftm',...
+    '-mat','-v7.3')
