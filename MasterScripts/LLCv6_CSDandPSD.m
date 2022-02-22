@@ -43,7 +43,8 @@ flag_halfwaverectify = false;
 list = dir(DATADIR);
 filelist = list(3:end);
 
-for h = 1:size(filelist,1)
+% for h = 1:size(filelist,1)
+for h = 1:1
     clearvars -except CODEDIR DATADIR OUTDIR ALIGNDIR...
         extension el sortdirection pre post...
         flag_subtractbasline flag_halfwaverectify...
@@ -69,7 +70,6 @@ for h = 1:size(filelist,1)
     
     
     for i = 1:size(ns2BRFSfiles,2)
-        try
         %%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         % SECTION 1 -- Create STIM -- Load LFP and Trial-Align %
@@ -83,33 +83,10 @@ for h = 1:size(filelist,1)
             V1 = 'LV1'; %% check this later
             STIM = diTP({BRdatafile},V1);
             [STIM,fails] = diPT(STIM); 
-        
-        %diV1lim
-            penetrationNumber = 1;
-            STIM.penetration = strcat(STIM.header,'_eD');
-            STIM.rmch = 0;
-            % STIM = diV1Lim(STIM,penetrationNumber);
-            TuneList = importTuneList();
-            idx = find(strcmp(TuneList.Datestr,STIM.header(1:6)));
-            idx = idx(penetrationNumber);
-            penetration =  TuneList.Penetration{idx};
-            l4c = TuneList.SinkBtm(strcmp(TuneList.Penetration,penetration));
-            l4l = sprintf('e%s%02u',penetration(end),l4c);
-            load([ALIGNDIR penetration ,'.mat'],'elabel','v1lim','fRF')
-            clear v1lim
-            v1lim = [1 24];
-            el_labels = elabel(v1lim(1):v1lim(2));
-            l4_idx    = find(strcmp(el_labels,l4l));
-            ninside   = length(el_labels);
-            depths    = [0:ninside-1; -1*((1:ninside) - l4_idx); ninside-1:-1:0]';
-            STIM.el_labels    =  el_labels;
-            STIM.depths       =  depths;
-            STIM.v1lim         = [v1lim(1) find(strcmp(elabel,l4l)) v1lim(2)];
-        
-%         Create LFP triggered SDF -- SDF is in ch x time x trials
+            STIM.el_labels    =    {'eD01','eD02','eD03','eD04','eD05','eD06','eD07','eD08','eD09','eD10','eD11','eD12','eD13','eD14','eD15','eD16','eD17','eD18','eD19','eD20','eD21','eD22','eD23','eD24'};
 
-ADD Ellabels needed here.
-
+        
+        % Create LFP triggered SDF -- SDF is in ch x time x trials
             [RESP, win_ms, SDF, sdftm, PSTH, psthtm]= trialAlignLFP_BMC(STIM,pre,post); %note 'pre' must be negative
             chans = 1:size(SDF,1);
         
@@ -263,26 +240,26 @@ ADD Ellabels needed here.
             % warning('removing top channel artifact - necessary? BMC DEV!!')
             % powerAvg(:,1) = 0;
         
-        % normalize power @ each frequency relative to power across contacts 
-         power_norm = nan(size(powerAvg)); 
-         for ch = 1:size(powerAvg,2)
-             for f = 1:size(powerAvg,1)
-                 power_norm(f,ch) = (powerAvg(f,ch) - mean(powerAvg(f,:)))./(mean(powerAvg(f,:))) * 100; % percent deviation from mean
-             end
-         end
-        
-    
-    
+% %         % normalize power @ each frequency relative to power across contacts 
+% %          power_norm = nan(size(powerAvg)); 
+% %          for ch = 1:size(powerAvg,2)
+% %              for f = 1:size(powerAvg,1)
+% %                  power_norm(f,ch) = (powerAvg(f,ch) - mean(powerAvg(f,:)))./(mean(powerAvg(f,:))) * 100; % percent deviation from mean
+% %              end
+% %          end
+% %         
+        power_normAB = powerAvg ./ max(powerAvg, [], 2);
+            
         % Create Fig
             psdfig = figure('Position',[637 44.2000 749.6000 728.8000]);
             titleTextPSD = {'Stimulus Evoked PSD',BRdatafile};
             sgtitle(titleTextPSD,'interpreter','none')
     
-        chans = 1:size(power_norm,2);
+        chans = 1:size(power_normAB,2);
     
         subplot(1,2,1)
         set(gcf,'color','w'); 
-        imagesc(freq_vector,chans,power_norm'); 
+        imagesc(freq_vector,chans,power_normAB'); 
         colormap('hot'); xlim([0 100]); 
         xlabel('freq (Hz)'); ylabel('contact number'); 
         set(gca,'tickdir','out','ytick',chans); 
@@ -291,14 +268,14 @@ ADD Ellabels needed here.
         % Get the Gamma x Beta cross
         % Beta is 12 - 20Hz (for our purposes)
         % Gamma is 30-59,61:100
-        beta_index = (freq_vector > 12) & (freq_vector < 25);
-        gamma_index = (freq_vector > 30) ;
+        beta_index = (freq_vector > 10) & (freq_vector < 30); % includes Alpha and beta
+        gamma_index = (freq_vector > 40) & (freq_vector < 250);
         gamma_index(idx60hz) = false;
         
         clear j avgBeta avgGamma
         for j = chans
-            avgBeta(j,1) = mean(power_norm(beta_index,j));
-            avgGamma(j,1) = nanmean(power_norm(gamma_index,j));
+            avgBeta(j,1) = mean(power_normAB(beta_index,j));
+            avgGamma(j,1) = nanmean(power_normAB(gamma_index,j));
         end
         
         
@@ -329,8 +306,6 @@ ADD Ellabels needed here.
     
     
         %% End of filelist loop
-        catch
-            %nothing to do
-        end  
+
     end
 end

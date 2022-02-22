@@ -34,7 +34,7 @@ nwin      = size(win_ms,1);
 
 el_labels = STIM.el_labels;
 
-nel = length(STIM.depths);
+nel = length(el_labels);
 
 
 
