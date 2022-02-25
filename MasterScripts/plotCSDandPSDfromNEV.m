@@ -21,12 +21,12 @@ FileInformation = table(folderName,useSession,evpNumber,useChans,interpTheseChan
 clearvars -except FileInformation
 
 %% Choose your session number
-SessionNum = 8;
-% for SessionNum = 1:11
+% SessionNum = 8;
+for SessionNum = 1:11
 %%
-% if ~FileInformation.useSession(SessionNum)
-%     continue
-% end
+if ~FileInformation.useSession(SessionNum)
+    continue
+end
 
 BRdatafile = FileInformation.fullFileName{SessionNum};
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
@@ -301,4 +301,4 @@ legend('Beta','Gamma','Location','best')
 titleText = {'Normalized Gamma x Beta power across contacts',BRdatafile(22:end)};
 
 
-% end
+end
