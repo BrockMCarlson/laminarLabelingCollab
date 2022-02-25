@@ -5,30 +5,42 @@
 
 clear
 close all
-% BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220131_B\220131_B_evp003';
-% BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220202_B\220202_B_evp003';
-% BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220204_B\220204_B_evp004';
-% BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220207_B\220207_B_evp007';
-% BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220209_B\220209_B_evp003';
-BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220211_B\220211_B_evp005';
-% BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220214_B\220214_B_evp003';
 
+%% Set up file list
+tebaFile    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\';
+folderName = ['220131_B';"220202_B";"220204_B";"220207_B";"220209_B";"220211_B";"220214_B";"220216_B";"220218_B";"220221_B";"220223_B"];
+evpNumber = ['4';'3';'5';'7';'3';'5';'3';'8';'3';'4';'3'];
+for i = 1:11
+    fullFileName(i,1) = strcat(tebaFile, folderName(i), filesep, folderName(i), '_evp00', evpNumber(i));
+end
+useChans = {1:24; 1:24; 1:24; 1:31; 1:31; 1:31; 1:31; 1:31; 1:31; 1:31; 1:31};
+interpTheseChans = {[15,22]; [15,22]; [15,22]; [14]; [18]; [5,10]; [16]; [13 16]; [16]; [16]; []};
+useSession = [false; false; false; false; true; true; true; true; true; true; true];
 
+FileInformation = table(folderName,useSession,evpNumber,useChans,interpTheseChans,fullFileName);
+clearvars -except FileInformation
+
+%% Choose your session number
+SessionNum = 8;
+% for SessionNum = 1:11
+%%
+% if ~FileInformation.useSession(SessionNum)
+%     continue
+% end
+
+BRdatafile = FileInformation.fullFileName{SessionNum};
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
 el            = 'eA';
 sortdirection = 'ascending'; %  descending (NN) or ascending (Uprobe) % new note -- BMC 211007_B descenting and ascending is a moot point because of the new channel map
-% pre           = 50;
-% post          = 250;
 pre           = 50;
 post          = 250;
-chans    =    [1:31]; 
-trls          = [];
+chans = FileInformation.useChans{SessionNum};
 
  
 flag_subtractbasline = true;
 flag_halfwaverectify = false;
 flag_interpolate = true;
-interp_chans = [5 10 22];
+interp_chans = FileInformation.interpTheseChans{SessionNum};
 
 clear LFP EventCodes EventTimes DAT TM CSD CSDf corticaldepth y
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,11 +55,7 @@ LFP = LFP(:,chans);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [DAT, TM] = trigData(LFP, triggerpoints , pre, post);
-if isempty(trls)
-    EVP = mean(DAT,3);
-else
-EVP = mean(DAT(:,:,trls),3);
-end
+EVP = mean(DAT,3);
 
 
 if flag_interpolate 
@@ -57,25 +65,15 @@ if flag_interpolate
     end
 end
 
-% deal w/ bad channes
-switch BRdatafile
-    case {'151208_E_rfori001' '151208_E_rfori002','151218_I_evp002'}
-        EVP(:,17) = mean([EVP(:,18), EVP(:,16)],2);
-    case '151205_E_dotmapping003'
-        EVP(:,18) = mean([EVP(:,17), EVP(:,19)],2);
-    case {'160115_E_evp001', '160115_E_rfori001', '160115_E_rfori002','160115_E_mcosinteroc001'}
-        EVP(:,end-3:end) = [];
-    case '160831_E_evp001'
-        EVP(:,21) = mean([EVP(:,20), EVP(:,22)],2);
-end
+
         
 %%
 %figure;
 switch sortdirection
     case 'ascending' 
-        corticaldepth = [chans] ;
+        corticaldepth = chans ;
     case 'descending'
-        corticaldepth = fliplr([chans]);
+        corticaldepth = fliplr(chans);
 end
 %f_ShadedLinePlotbyDepth(EVP,corticaldepth,TM,[],1)
 %title(BRdatafile,'interpreter','none')
@@ -120,9 +118,6 @@ caxis([-500 500])
 %%
 
 
-%chanLim = [10:13 15:17 19:25]; 
-% chanLim = [1:6 8:14 16:32]; 
-%chanLim = [1:14 16:32]; 
 chanLim = chans;
 jnmfile = [BRdatafile '.ns2'];
 badchan = [];
@@ -281,7 +276,7 @@ end
 set(gca, 'xtick', 1:5:100);
 set(gca, 'xticklabel', xlabel)
 d = colorbar;
-set(gcf,'Position',[9 48 1894 933]); 
+set(gcf,'Position',[5.8000 98.6000 1.5072e+03 671.2000]); 
 
 xlim([1 100])
 
@@ -306,3 +301,4 @@ legend('Beta','Gamma','Location','best')
 titleText = {'Normalized Gamma x Beta power across contacts',BRdatafile(22:end)};
 
 
+% end

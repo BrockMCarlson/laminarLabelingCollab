@@ -6,23 +6,37 @@
 clear
 close all
 
-BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220131_B\220131_B_evp004';
+%% Set up file list
+tebaFile    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\';
+folderName = ['220131_B';"220202_B";"220204_B";"220207_B";"220209_B";"220211_B";"220214_B";"220216_B";"220218_B";"220221_B";"220223_B"];
+evpNumber = ['4';'3';'5';'7';'3';'5';'3';'8';'3';'4';'3'];
+for i = 1:11
+    fullFileName(i,1) = strcat(tebaFile, folderName(i), filesep, folderName(i), '_evp00', evpNumber(i));
+end
+useChans = {1:24; 1:24; 1:24; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32};
+interpTheseChans = {[15,22]; [15,22]; [15,22]; [14]; [18]; [5,10,22]; [5,10,22]; [5,10,22]; [5,10,22]; [5,10,22]; 6};
+useSession = [false; false; false; false; true; false; true; true; true; true; true];
 
+FileInformation = table(folderName,useSession,evpNumber,useChans,interpTheseChans,fullFileName);
+clearvars -except FileInformation
+
+%% Choose your session number
+SessionNum = 1;
+%%
+
+BRdatafile = FileInformation(SessionNum,"fullFileName");
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
 el            = 'eA';
 sortdirection = 'ascending'; %  descending (NN) or ascending (Uprobe) % new note -- BMC 211007_B descenting and ascending is a moot point because of the new channel map
-% pre           = 50;
-% post          = 250;
 pre           = 50;
 post          = 250;
-chans    =    []; 
-trls          = [1:200];
+chans = FileInformation.useChans{SessionNum};
 
  
 flag_subtractbasline = true;
 flag_halfwaverectify = false;
 flag_interpolate = true;
-interp_chans = [15,22];
+interp_chans = array(FileInformation(SessionNum,"interpTheseChans"));
 
 clear LFP EventCodes EventTimes DAT TM CSD CSDf corticaldepth y
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,11 +51,7 @@ LFP = LFP(:,chans);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [DAT, TM] = trigData(LFP, triggerpoints , pre, post);
-if isempty(trls)
-    EVP = mean(DAT,3);
-else
-EVP = mean(DAT(:,:,trls),3);
-end
+EVP = mean(DAT,3);
 
 
 if flag_interpolate 
@@ -51,25 +61,15 @@ if flag_interpolate
     end
 end
 
-% deal w/ bad channes
-switch BRdatafile
-    case {'151208_E_rfori001' '151208_E_rfori002','151218_I_evp002'}
-        EVP(:,17) = mean([EVP(:,18), EVP(:,16)],2);
-    case '151205_E_dotmapping003'
-        EVP(:,18) = mean([EVP(:,17), EVP(:,19)],2);
-    case {'160115_E_evp001', '160115_E_rfori001', '160115_E_rfori002','160115_E_mcosinteroc001'}
-        EVP(:,end-3:end) = [];
-    case '160831_E_evp001'
-        EVP(:,21) = mean([EVP(:,20), EVP(:,22)],2);
-end
+
         
 %%
 %figure;
 switch sortdirection
     case 'ascending' 
-        corticaldepth = [chans] ;
+        corticaldepth = chans ;
     case 'descending'
-        corticaldepth = fliplr([chans]);
+        corticaldepth = fliplr(chans);
 end
 %f_ShadedLinePlotbyDepth(EVP,corticaldepth,TM,[],1)
 %title(BRdatafile,'interpreter','none')
@@ -120,7 +120,6 @@ caxis([-500 500])
 chanLim = chans;
 jnmfile = [BRdatafile '.ns2'];
 badchan = [];
-flag_interpolate = true;
 
 if ~exist( 'val', 'var' )    
     val = 15; 
@@ -215,18 +214,7 @@ if flag_interpolate
     end
 end
 
-%if flag_interpolate 
-    %for i = 1:length(interp_chans)
-     %   badChan = interp_chans(i);
-   % lfp2(interp_chan1,:) = (lfp2(interp_chan1+1,:) + lfp2(interp_chan1-1,:)) / 2;
-    %end
-    %if ~isempty(interp_chan2)
-    %lfp2(interp_chan2,:) = (lfp2(interp_chan2+1,:) + lfp2(interp_chan2-1,:)) / 2;
-    %end
-    %if ~isempty(interp_chan3)
-   % lfp2(interp_chan3,:) = (lfp2(interp_chan3+1,:) + lfp2(interp_chan3-1,:)) / 2;
-   % end
-%end
+
 valn = 2^val;
 
     jnm = zeros( numel(chanLim), 257 );
@@ -287,7 +275,7 @@ end
 set(gca, 'xtick', 1:5:100);
 set(gca, 'xticklabel', xlabel)
 d = colorbar;
-set(gcf,'Position',[9 48 1894 933]); 
+set(gcf,'Position',[5.8000 98.6000 1.5072e+03 671.2000]); 
 
 xlim([1 100])
 
@@ -297,7 +285,7 @@ beta_index = (freq_vector > 10) & (freq_vector < 35);
 gamma_index = (freq_vector > 38) ;
 
 clear i avgBeta avgGamma
-for i = chans
+for i = 1:size(normpowAB,1)
     avgBeta(i,1) = mean(normpowAB(i,beta_index));
     avgGamma(i,1) = mean(normpowAB(i,gamma_index));
 end
