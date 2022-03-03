@@ -8,21 +8,21 @@ close all
 
 %% Set up file list
 tebaFile    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\';
-folderName = ['220131_B';"220202_B";"220204_B";"220207_B";"220209_B";"220211_B";"220214_B";"220216_B";"220218_B";"220221_B";"220223_B"];
-evpNumber = ['4';'3';'5';'7';'3';'5';'3';'8';'3';'4';'3'];
-for i = 1:11
+folderName = ['220131_B';"220202_B";"220204_B";"220207_B";"220209_B";"220211_B";"220214_B";"220216_B";"220218_B";"220221_B";"220223_B";"220225_B";"220228_B"];
+evpNumber = ['4';'3';'5';'7';'3';'5';'3';'8';'3';'4';'4';'4';'2'];
+for i = 1:13
     fullFileName(i,1) = strcat(tebaFile, folderName(i), filesep, folderName(i), '_evp00', evpNumber(i));
 end
-useChans = {1:24; 1:24; 1:24; 1:31; 1:31; 1:31; 1:31; 1:31; 1:31; 1:31; 1:31};
-interpTheseChans = {[15,22]; [15,22]; [15,22]; [14]; [18]; [5,10]; [16]; [13 16]; [16]; [16]; []};
-useSession = [false; false; false; false; true; true; true; true; true; true; true];
+useChans = {1:24; 1:24; 1:24; 1:31; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32};
+interpTheseChans = {[15,22]; [15,22]; [15,22]; [14]; [18]; [5,10]; [16]; [13 16]; [16]; [16]; []; []; []};
+useSession = [false; false; false; false; true; true; true; true; true; true; true; true; true];
 
 FileInformation = table(folderName,useSession,evpNumber,useChans,interpTheseChans,fullFileName);
 clearvars -except FileInformation
 
 %% Choose your session number
 % SessionNum = 8;
-for SessionNum = 1:11
+for SessionNum = 1:13
 %%
 if ~FileInformation.useSession(SessionNum)
     continue
@@ -55,6 +55,8 @@ LFP = LFP(:,chans);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 [DAT, TM] = trigData(LFP, triggerpoints , pre, post);
+calcCSDonThis = permute(EVPvak,[2 1]); %dim chould be chan x ms
+
 EVP = mean(DAT,3);
 
 
@@ -79,14 +81,13 @@ end
 %title(BRdatafile,'interpreter','none')
 
 %%
-CSD = calcCSD(EVP);
+CSD = calcCSD_classic(EVP); % contains padArray. Input is time x chan. Output is Chan x time
 if flag_subtractbasline
     CSD = bsxfun(@minus,CSD,mean(CSD(:,TM<0),2));
 end
 if flag_halfwaverectify
     CSD(CSD > 0) = 0;
 end
-CSD = padarray(CSD,[1 0],NaN,'replicate');
 figure
 subplot(1,5,1)
 f_ShadedLinePlotbyDepth(CSD,corticaldepth,TM,[],1)
@@ -261,8 +262,8 @@ normpowAB = jnmrm(:,:) ./ nanmax(jnmrm(:,:), [], 1);
 subplot(1,5,[3 4]);
 imagesc(normpowAB(:,1:100))
 
-
-colormap('Jet')
+psdAx = gca;
+colormap(psdAx,'Jet')
 
 xlabel ={};
 indx = 1;
@@ -300,5 +301,9 @@ set(gca,'xdir','reverse')
 legend('Beta','Gamma','Location','best')
 titleText = {'Normalized Gamma x Beta power across contacts',BRdatafile(22:end)};
 
+
+%% Save variables
+allCSD(SessionNum,:,:) = CSD;
+allPSD(SessionNum,:,:) = normpowAB;
 
 end

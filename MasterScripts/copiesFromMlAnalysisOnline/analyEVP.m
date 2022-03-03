@@ -1,5 +1,5 @@
 clearvars -except ASubBase
-BRdatafile    = 'D:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220131_B\220131_B_evp004';
+BRdatafile    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\220228_B\220228_B_evp002';
 
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
 el            = 'eA';
@@ -9,9 +9,9 @@ sortdirection = 'ascending'; %  descending (NN) or ascending (Uprobe) % new note
 pre           = 50;
 post          = 250;
 %chans         = [1:17 19:20 22:32];
-chans    =    [1:24]; 
+chans    =    [1:32]; 
 %chans           = [1:2:24];
-trls          = [1:200];
+trls          = [1:1000];
 
  
 flag_subtractbasline = true;
@@ -50,17 +50,7 @@ if flag_interpolate
     end
 end
 
-% deal w/ bad channes
-switch BRdatafile
-    case {'151208_E_rfori001' '151208_E_rfori002','151218_I_evp002'}
-        EVP(:,17) = mean([EVP(:,18), EVP(:,16)],2);
-    case '151205_E_dotmapping003'
-        EVP(:,18) = mean([EVP(:,17), EVP(:,19)],2);
-    case {'160115_E_evp001', '160115_E_rfori001', '160115_E_rfori002','160115_E_mcosinteroc001'}
-        EVP(:,end-3:end) = [];
-    case '160831_E_evp001'
-        EVP(:,21) = mean([EVP(:,20), EVP(:,22)],2);
-end
+
         
 %%
 %figure;

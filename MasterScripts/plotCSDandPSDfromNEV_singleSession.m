@@ -3,30 +3,27 @@
 % Combined from analyEVP.m and analyPSDdepth_redo.m in MLAnalysisOnline
 
 
-clear
-close all
-
+clearvars -except holder
+% close all
+codeDir = 'C:\Users\Brock\Documents\MATLAB\GitHub\laminarLabelingCollab\MasterScripts';
+cd(codeDir)
 %% Set up file list
 tebaFile    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\';
-folderName = ['220131_B';"220202_B";"220204_B";"220207_B";"220209_B";"220211_B";"220214_B";"220216_B";"220218_B";"220221_B";"220223_B";"220225_B";"220228_B"];
-evpNumber = ['4';'3';'5';'7';'3';'5';'3';'8';'3';'4';'4';'4';'2'];
-for i = 1:13
-    fullFileName(i,1) = strcat(tebaFile, folderName(i), filesep, folderName(i), '_evp00', evpNumber(i));
-end
-useChans = {1:24; 1:24; 1:24; 1:31; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32; 1:32};
-interpTheseChans = {[15,22]; [15,22]; [15,22]; [14]; [18]; [5,10]; [16]; [13 16]; [16]; [16]; []; []; []};
-useSession = [false; false; false; false; true; true; true; true; true; true; true; true; true];
+folderName = "220228_B";
+evpNumber = {'2'};
+fullFileName = strcat(tebaFile, folderName, filesep, folderName, '_evp00', evpNumber);
+
+useChans = {1:32};
+interpTheseChans = {[5 12 19]};
+
+useSession = true;
 
 FileInformation = table(folderName,useSession,evpNumber,useChans,interpTheseChans,fullFileName);
-clearvars -except FileInformation
+clearvars -except FileInformation holder
 
 %% Choose your session number
-% SessionNum = 8;
-for SessionNum = 1:11
-%%
-if ~FileInformation.useSession(SessionNum)
-    continue
-end
+SessionNum = 1;
+
 
 BRdatafile = FileInformation.fullFileName{SessionNum};
 extension     = 'ns2'; % THIS CODE DOES NOT DOWNSAMPLE OR FILTER DATA
@@ -261,8 +258,8 @@ normpowAB = jnmrm(:,:) ./ nanmax(jnmrm(:,:), [], 1);
 subplot(1,5,[3 4]);
 imagesc(normpowAB(:,1:100))
 
-
-colormap('Jet')
+psdAx = gca;
+colormap(psdAx,'Jet')
 
 xlabel ={};
 indx = 1;
@@ -301,4 +298,3 @@ legend('Beta','Gamma','Location','best')
 titleText = {'Normalized Gamma x Beta power across contacts',BRdatafile(22:end)};
 
 
-end
