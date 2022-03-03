@@ -5,13 +5,13 @@
 
 clearvars -except holder
 % close all
-codeDir = 'C:\Users\Brock\Documents\MATLAB\GitHub\laminarLabelingCollab\MasterScripts';
-cd(codeDir)
+% % codeDir = 'C:\Users\Brock\Documents\MATLAB\GitHub\laminarLabelingCollab\MasterScripts';
+% % cd(codeDir)
 %% Set up file list
-tebaFile    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\';
+dataFileLocation    = 'T:\rig021_LaminarLabelingCollaboration\EndOfDayFileOutputs\';
 folderName = "220228_B";
 evpNumber = {'2'};
-fullFileName = strcat(tebaFile, folderName, filesep, folderName, '_evp00', evpNumber);
+fullFileName = strcat(dataFileLocation, folderName, filesep, folderName, '_evp00', evpNumber);
 
 useChans = {1:32};
 interpTheseChans = {[5 12 19]};
